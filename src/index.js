@@ -17,30 +17,21 @@ import swaggerSpec from "../swaggerConfig.js";
 
 import path from "path";
 import { getLocalIp } from "./utils/util.js";
-import fs from "fs";
 import http from "http";
 import { Server } from "socket.io";
 
-import { DB_HOST, DB_DATABASE, isProduction } from "./config.js";
+import { isProduction } from "./config.js";
 
 const app = express();
 
 const allowedOrigins = isProduction
   ? [
-      "https://www.sunsethousehn.com",
-      "http://www.sunsethousehn.com",
-      "https://sunsethousehn.com",
-      "http://sunsethousehn.com",
-      "https://sfac.sunsethousehn.com",
-      "http://sfac.sunsethousehn.com",
+      "http://latienditadelrio.digidevelops.com",
+      "https://latienditadelrio.digidevelops.com"
     ]
   : [
-      "https://www.sunsethousehn.com",
-      "http://www.sunsethousehn.com",
-      "https://sunsethousehn.com",
-      "http://sunsethousehn.com",
-      "https://sfac.sunsethousehn.com",
-      "http://sfac.sunsethousehn.com",
+      "http://latienditadelrio.digidevelops.com",
+      "https://latienditadelrio.digidevelops.com",
       "http://localhost:*",
       "http://127.0.0.1:*",
       /http:\/\/192\.168\.\d+\.\d+:\d+/, // Local IPs

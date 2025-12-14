@@ -13,7 +13,7 @@ const swaggerOptions = {
     info: {
       title: "SFAC API",
       version: "1.6.0",
-      description: "API para el aplicativo SUNSET",
+      description: "API para el aplicativo LA TIENDITA DEL RIO",
     },
     components: {
       schemas: {
@@ -112,7 +112,7 @@ const swaggerOptions = {
     servers: isProduction
       ? [
           {
-            url: `https://api.sunsethousehn.com`,
+            url: `https://latienditadelrioapi.digidevelops.com`,
             description: "Servidor de producción",
           },
         ]
