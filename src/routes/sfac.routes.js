@@ -51,6 +51,22 @@ import {
   ActualizarEstadoOrdenesController,
   AsignarOrdenFacturaController,
 } from "../controllers/sfac.controller.js";
+
+// Controllers de Apertura/Cierre de Caja (archivo separado)
+import {
+  AbrirCajaController,
+  CerrarCajaController,
+  ObtenerEstadoCajaController,
+  ValidarPuedeFacturarController,
+  ObtenerHistorialCajaController,
+  ObtenerResumenVentasCajaController,
+  CrearMovimientoCajaController,
+  ObtenerMovimientosCajaController,
+  EliminarMovimientoCajaController,
+  ObtenerReporteCierreCajaController,
+  ObtenerReporteVentasDiariasController,
+  ObtenerReporteComprasDiariasController,
+} from "../controllers/caja.controller.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import { privilegedAuthMiddleware } from "../middlewares/privilegedAuthMiddleware.js";
 
@@ -1217,7 +1233,7 @@ router.get(
 router.post(
   "/CrearDetalleFactura",
   authMiddleware,
-  privilegedAuthMiddleware, 
+  privilegedAuthMiddleware,
   CrearDetalleFacturaController
 );
 router.post(
@@ -1227,7 +1243,7 @@ router.post(
 router.post(
   "/CrearDetalleFactura",
   authMiddleware,
-  privilegedAuthMiddleware, 
+  privilegedAuthMiddleware,
   CrearDetalleFacturaController
 );
 router.put(
@@ -1291,7 +1307,7 @@ router.post(
 router.put(
   "/EditarDetalleFormasPago",
   authMiddleware,
-  privilegedAuthMiddleware, 
+  privilegedAuthMiddleware,
   EditarDetalleFormasPagoController
 );
 
@@ -1639,5 +1655,181 @@ router.put("/CerrarOrden", authMiddleware, CerrarOrdenesController);
  */
 
 
+
+// ==========================================
+// RUTAS DE APERTURA/CIERRE DE CAJA
+// ==========================================
+
+/**
+ * @swagger
+ * /SFAC/AbrirCaja:
+ *   post:
+ *     summary: Abrir caja para el usuario
+ *     tags: [SFAC - Caja]
+ */
+router.post("/AbrirCaja", authMiddleware, AbrirCajaController);
+
+/**
+ * @swagger
+ * /SFAC/CerrarCaja:
+ *   post:
+ *     summary: Cerrar caja del usuario
+ *     tags: [SFAC - Caja]
+ */
+router.post("/CerrarCaja", authMiddleware, CerrarCajaController);
+
+/**
+ * @swagger
+ * /SFAC/ObtenerEstadoCaja:
+ *   get:
+ *     summary: Obtener estado actual de la caja del usuario
+ *     tags: [SFAC - Caja]
+ */
+router.get("/ObtenerEstadoCaja", authMiddleware, ObtenerEstadoCajaController);
+
+/**
+ * @swagger
+ * /SFAC/ValidarPuedeFacturar:
+ *   get:
+ *     summary: Validar si el usuario puede facturar (caja abierta)
+ *     tags: [SFAC - Caja]
+ */
+router.get("/ValidarPuedeFacturar", authMiddleware, ValidarPuedeFacturarController);
+
+/**
+ * @swagger
+ * /SFAC/ObtenerHistorialCaja:
+ *   get:
+ *     summary: Obtener historial de aperturas/cierres de caja
+ *     tags: [SFAC - Caja]
+ */
+router.get("/ObtenerHistorialCaja", authMiddleware, ObtenerHistorialCajaController);
+
+/**
+ * @swagger
+ * /SFAC/ObtenerResumenVentasCaja:
+ *   get:
+ *     summary: Obtener resumen de ventas de la caja actual
+ *     tags: [SFAC - Caja]
+ */
+router.get("/ObtenerResumenVentasCaja", authMiddleware, ObtenerResumenVentasCajaController);
+
+// ==========================================
+// RUTAS DE MOVIMIENTOS DE CAJA
+// ==========================================
+
+/**
+ * @swagger
+ * /SFAC/CrearMovimientoCaja:
+ *   post:
+ *     summary: Crear un movimiento de caja (gasto, retiro, ingreso)
+ *     tags: [SFAC - Caja]
+ */
+router.post("/CrearMovimientoCaja", authMiddleware, CrearMovimientoCajaController);
+
+/**
+ * @swagger
+ * /SFAC/ObtenerMovimientosCaja:
+ *   get:
+ *     summary: Obtener movimientos de la caja
+ *     tags: [SFAC - Caja]
+ */
+router.get("/ObtenerMovimientosCaja", authMiddleware, ObtenerMovimientosCajaController);
+
+/**
+ * @swagger
+ * /SFAC/EliminarMovimientoCaja:
+ *   delete:
+ *     summary: Eliminar un movimiento de caja
+ *     tags: [SFAC - Caja]
+ */
+router.delete("/EliminarMovimientoCaja", authMiddleware, EliminarMovimientoCajaController);
+
+// ==========================================
+// RUTAS DE REPORTES
+// ==========================================
+
+/**
+ * @swagger
+ * /SFAC/ReporteCierreCaja:
+ *   get:
+ *     summary: Obtener reporte de cierre de caja
+ *     tags: [SFAC - Reportes]
+ */
+router.get("/ReporteCierreCaja", authMiddleware, ObtenerReporteCierreCajaController);
+
+/**
+ * @swagger
+ * /SFAC/ReporteVentasDiarias:
+ *   get:
+ *     summary: Obtener reporte de ventas diarias
+ *     tags: [SFAC - Reportes]
+ *     parameters:
+ *       - in: query
+ *         name: FechaInicio
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: true
+ *         description: Fecha de inicio del reporte (YYYY-MM-DD)
+ *       - in: query
+ *         name: FechaFin
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: true
+ *         description: Fecha de fin del reporte (YYYY-MM-DD)
+ *       - in: query
+ *         name: CodigoSucursal
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Código de la sucursal (opcional)
+ *       - in: query
+ *         name: CodigoCaja
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Código de la caja (opcional)
+ */
+router.get("/ReporteVentasDiarias", authMiddleware, ObtenerReporteVentasDiariasController);
+
+/**
+ * @swagger
+ * /SFAC/ReporteComprasDiarias:
+ *   get:
+ *     summary: Obtener reporte de compras diarias
+ *     tags: [Reportes]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: FechaInicio
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: true
+ *         description: Fecha de inicio del reporte (YYYY-MM-DD)
+ *       - in: query
+ *         name: FechaFin
+ *         schema:
+ *           type: string
+ *           format: date
+ *         required: true
+ *         description: Fecha de fin del reporte (YYYY-MM-DD)
+ *       - in: query
+ *         name: CodigoProveedor
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Código del proveedor (opcional)
+ *       - in: query
+ *         name: CodigoEstado
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Código del estado de la factura (opcional, por defecto CERRADA)
+ */
+router.get("/ReporteComprasDiarias", authMiddleware, ObtenerReporteComprasDiariasController);
 
 export default router;

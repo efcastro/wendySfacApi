@@ -51,10 +51,10 @@ export const GestionarFacturas = async (TipoOperacion, datos) => {
       pnCodigoFormaPago: IsNull(CodigoFormaPago),
       pnPagina: IsNull(Pagina),
       pnTamanoPagina: IsNull(TamanoPagina),
-      Aux: IsNull( JSON.stringify(Aux)),
+      Aux: IsNull(JSON.stringify(Aux)),
     };
     const orderedParams = Object.values(Params);
-    
+
 
     // Ejecutar el procedimiento almacenado
     await pool.query(
@@ -147,7 +147,7 @@ export const GestionarInventario = async (TipoOperacion, datos) => {
       TieneExtras,
       TieneVariantes,
     } = datos;
-    
+
     // Extraer los parámetros en el orden correcto
     const Params = {
       pnTipoOperacion: TipoOperacion,
@@ -514,6 +514,189 @@ export const GestionarOrdenes = async (TipoOperacion, datos) => {
     return ValidarRespuestaSp(
       TypeResultErrorNoControlado,
       "GestionarOrdenesService: " + err
+    );
+  }
+};
+
+// ==========================================
+// SERVICIOS DE APERTURA/CIERRE DE CAJA
+// ==========================================
+
+export const GestionarAperturaCierreCaja = async (TipoOperacion, datos) => {
+  try {
+    const {
+      CodigoApertura,
+      CodigoCajaSucursal,
+      CodigoUsuario,
+      MontoInicial,
+      MontoFinalReal,
+      Observaciones,
+      Pagina,
+      TamanoPagina,
+    } = datos;
+
+    const { SpGestionarAperturaCierreCaja } = await import("../utils/constantes.js");
+
+    const Params = {
+      pnTipoOperacion: TipoOperacion,
+      pnCodigoApertura: IsNull(CodigoApertura),
+      pnCodigoCajaSucursal: IsNull(CodigoCajaSucursal),
+      pnCodigoUsuario: IsNull(CodigoUsuario),
+      pnMontoInicial: IsNull(MontoInicial),
+      pnMontoFinalReal: IsNull(MontoFinalReal),
+      pcObservaciones: IsNull(Observaciones),
+      pnPagina: IsNull(Pagina),
+      pnTamanoPagina: IsNull(TamanoPagina),
+    };
+
+    const orderedParams = Object.values(Params);
+
+    await pool.query(
+      `CALL ${SpGestionarAperturaCierreCaja}(?, ?, ?, ?, ?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [...orderedParams]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("GestionarAperturaCierreCajaService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "GestionarAperturaCierreCajaService: " + err
+    );
+  }
+};
+
+export const GestionarMovimientosCaja = async (TipoOperacion, datos) => {
+  try {
+    const {
+      CodigoMovimiento,
+      CodigoAperturaCierre,
+      TipoMovimiento,
+      Monto,
+      Descripcion,
+      CodigoUsuario,
+    } = datos;
+
+    const { SpGestionarMovimientosCaja } = await import("../utils/constantes.js");
+
+    const Params = {
+      pnTipoOperacion: TipoOperacion,
+      pnCodigoMovimiento: IsNull(CodigoMovimiento),
+      pnCodigoAperturaCierre: IsNull(CodigoAperturaCierre),
+      pcTipoMovimiento: IsNull(TipoMovimiento),
+      pdMonto: IsNull(Monto),
+      pcDescripcion: IsNull(Descripcion),
+      pnCodigoUsuario: IsNull(CodigoUsuario),
+    };
+
+    const orderedParams = Object.values(Params);
+
+    await pool.query(
+      `CALL ${SpGestionarMovimientosCaja}(?, ?, ?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [...orderedParams]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("GestionarMovimientosCajaService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "GestionarMovimientosCajaService: " + err
+    );
+  }
+};
+
+export const ObtenerReporteCierreCaja = async (datos) => {
+  try {
+    const { CodigoApertura, CodigoUsuario } = datos;
+
+    const { SpReporteCierreCaja } = await import("../utils/constantes.js");
+
+    await pool.query(
+      `CALL ${SpReporteCierreCaja}(?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [IsNull(CodigoApertura), IsNull(CodigoUsuario)]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("ObtenerReporteCierreCajaService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "ObtenerReporteCierreCajaService: " + err
+    );
+  }
+};
+
+export const ObtenerReporteVentasDiarias = async (datos) => {
+  try {
+    const { FechaInicio, FechaFin, CodigoSucursal, CodigoCaja, CodigoUsuario } = datos;
+
+    const { SpReporteVentasDiarias } = await import("../utils/constantes.js");
+
+    await pool.query(
+      `CALL ${SpReporteVentasDiarias}(?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [
+        IsNull(FechaInicio),
+        IsNull(FechaFin),
+        IsNull(CodigoSucursal),
+        IsNull(CodigoCaja),
+        IsNull(CodigoUsuario),
+      ]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("ObtenerReporteVentasDiariasService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "ObtenerReporteVentasDiariasService: " + err
+    );
+  }
+};
+
+export const ObtenerReporteComprasDiarias = async (datos) => {
+  try {
+    const { FechaInicio, FechaFin, CodigoProveedor, CodigoEstado, CodigoUsuario } = datos;
+
+    const { SpReporteComprasDiarias } = await import("../utils/constantes.js");
+
+    await pool.query(
+      `CALL ${SpReporteComprasDiarias}(?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [
+        IsNull(FechaInicio),
+        IsNull(FechaFin),
+        IsNull(CodigoProveedor),
+        IsNull(CodigoEstado),
+        IsNull(CodigoUsuario),
+      ]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("ObtenerReporteComprasDiariasService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "ObtenerReporteComprasDiariasService: " + err
     );
   }
 };

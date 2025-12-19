@@ -11,6 +11,7 @@ import facturaRoutes from "./routes/factuta.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
 import printerRoutes from "./routes/printer.routes.js";
 import resvRoutes from "./routes/resv.routes.js";
+import comprasRoutes from "./routes/compras.routes.js";
 //SWAGGER
 import swaggerUI from "swagger-ui-express";
 import swaggerSpec from "../swaggerConfig.js";
@@ -27,7 +28,7 @@ const app = express();
 const allowedOrigins = isProduction
   ? [
       "http://latienditadelrio.digidevelops.com",
-      "https://latienditadelrio.digidevelops.com"
+      "https://latienditadelrio.digidevelops.com",
     ]
   : [
       "http://latienditadelrio.digidevelops.com",
@@ -58,8 +59,10 @@ app.use(express.urlencoded({ limit: "50mb", extended: true }));
 
 const __dirname = path.resolve();
 // Fix uploads path to point outside src/
-const uploadsPath = path.join(__dirname, "..", "uploads");
-
+const uploadsPath = isProduction
+  ? path.join(__dirname, "..", "uploads")
+  : path.join(__dirname, "/", "uploads");
+console.log("uploadsPath: ", uploadsPath);
 app.use(
   "/uploads",
   express.static(uploadsPath, {
@@ -89,6 +92,8 @@ app.use("/RESV", resvRoutes);
 app.use(facturaRoutes);
 // Upload routes
 app.use(uploadRoutes);
+// Compras routes
+app.use("/Compras", comprasRoutes);
 
 // Error handling middleware
 app.use(errorhandler);
