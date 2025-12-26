@@ -40,7 +40,7 @@ export const GestionarUsuarios = async (TipoOperacion, datos) => {
       );
     }
 
-    console.log("Contrasena encriptada:", contrasenaEncriptada);
+
     
 
     const params = {

@@ -26,7 +26,6 @@ export const authMiddleware = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    console.log("authMiddleware: Authorization Header:", authHeader);
     
     
     if (!authHeader?.startsWith('Bearer ')) {
