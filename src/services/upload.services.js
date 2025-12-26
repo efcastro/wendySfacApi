@@ -2,6 +2,9 @@ import sharp from "sharp";
 import fs from "fs";
 import path from "path";
 import { TypeResultExitoso } from "../utils/constantes.js";
+// Use absolute path - always point to uploads folder outside of src/
+const __dirname = path.resolve();
+const uploadsFolder = path.join(__dirname, "..", "uploads");
 
 export const uploadImage = async (file, body) => {
   try {
@@ -13,7 +16,7 @@ export const uploadImage = async (file, body) => {
     const filePath = file.path;
     // const nombreArchivo = `${codigo}_${nombre}.jpg`;
     const nombreArchivo = `${codigo}.jpg`;
-    const optimizedFilePath = path.join("uploads/", nombreArchivo);
+    const optimizedFilePath = path.join(uploadsFolder, nombreArchivo);
 
     // Optimizar la imagen con sharp
     await sharp(filePath)
