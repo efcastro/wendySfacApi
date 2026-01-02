@@ -15,6 +15,7 @@ import {
     ObtenerReporteCierreCaja,
     ObtenerReporteVentasDiarias,
     ObtenerReporteComprasDiarias,
+    ObtenerReporteInventario,
 } from "../services/sfac.services.js";
 import { CatchControlador } from "../utils/util.js";
 
