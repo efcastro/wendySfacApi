@@ -82,3 +82,4 @@ export const SpObtenerCatalogo = DB + "cat_SpObtenerCatalogo";
 export const SpGestionarFacturasCompras = DB + 'sfac_SpGestionarFacturasCompras';
 export const SpGestionarDetalleFacturasCompras = DB + 'sfac_SpGestionarDetalleFacturasCompras';
 export const SpReporteComprasDiarias = DB + 'sfac_SpReporteComprasDiarias';
+export const SpReporteInventario = DB + 'sfac_SpReporteInventario';

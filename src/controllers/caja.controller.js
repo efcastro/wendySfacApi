@@ -186,3 +186,17 @@ export const ObtenerReporteComprasDiariasController = async (req, res) => {
         CatchControlador(res, err);
     }
 };
+
+
+export const ObtenerReporteInventarioController = async (req, res) => {
+    try {
+        const result = await ObtenerReporteInventario({
+            ...req.query,
+            CodigoUsuario: req.user?.CodigoUsuario,
+        });
+        res.status(result.status).json(result.response);
+    } catch (err) {
+        console.error("ObtenerReporteInventarioController:", err);
+        CatchControlador(res, err);
+    }
+};

@@ -66,6 +66,7 @@ import {
   ObtenerReporteCierreCajaController,
   ObtenerReporteVentasDiariasController,
   ObtenerReporteComprasDiariasController,
+  ObtenerReporteInventarioController,
 } from "../controllers/caja.controller.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import { privilegedAuthMiddleware } from "../middlewares/privilegedAuthMiddleware.js";
@@ -1831,5 +1832,84 @@ router.get("/ReporteVentasDiarias", authMiddleware, ObtenerReporteVentasDiariasC
  *         description: Código del estado de la factura (opcional, por defecto CERRADA)
  */
 router.get("/ReporteComprasDiarias", authMiddleware, ObtenerReporteComprasDiariasController);
+
+/**
+ * @swagger
+ * /SFAC/ReporteInventario:
+ *   get:
+ *     summary: Obtener reporte completo de inventario
+ *     tags: [SFAC - Reportes]
+ *     parameters:
+ *       - in: query
+ *         name: CodigoCategoria
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filtro por categoría (opcional)
+ *       - in: query
+ *         name: CodigoSucursal
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filtro por sucursal (opcional)
+ *       - in: query
+ *         name: Busqueda
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Búsqueda por nombre o código de producto (opcional)
+ *       - in: query
+ *         name: TipoFiltroStock
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Tipo de filtro de stock (0=Todos, 1=Sin Stock, 2=Stock Bajo, 3=Stock Normal)
+ *     responses:
+ *       200:
+ *         description: Reporte de inventario generado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 typeResult:
+ *                   type: integer
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: Reporte de inventario generado correctamente
+ *                 result:
+ *                   type: object
+ *                   properties:
+ *                     FechaReporte:
+ *                       type: string
+ *                     TotalProductos:
+ *                       type: integer
+ *                     TotalUnidades:
+ *                       type: number
+ *                     ValorTotalInventario:
+ *                       type: number
+ *                     ValorPotencialVenta:
+ *                       type: number
+ *                     MargenPotencial:
+ *                       type: number
+ *                     ProductosSinStock:
+ *                       type: integer
+ *                     ProductosStockBajo:
+ *                       type: integer
+ *                     ProductosStockNormal:
+ *                       type: integer
+ *                     ProductosPorCategoria:
+ *                       type: array
+ *                     TopProductosValor:
+ *                       type: array
+ *                     Productos:
+ *                       type: array
+ *       400:
+ *         $ref: '#/components/responses/StandardResponse400'
+ *       500:
+ *         $ref: '#/components/responses/StandardResponse500'
+ */
+router.get("/ReporteInventario", authMiddleware, ObtenerReporteInventarioController);
 
 export default router;

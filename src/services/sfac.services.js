@@ -12,6 +12,12 @@ import {
   SpGestionarDetalleTalonario,
   SpGestionarCajaSucursal,
   SpGestionarOrdenes,
+  SpGestionarAperturaCierreCaja,
+  SpGestionarMovimientosCaja,
+  SpReporteCierreCaja,
+  SpReporteVentasDiarias,
+  SpReporteComprasDiarias,
+  SpReporteInventario,
 } from "../utils/constantes.js";
 const localIps = getLocalIp();
 const IPSERVER = `${localIps[0]}:${PORT}/`;
@@ -535,8 +541,6 @@ export const GestionarAperturaCierreCaja = async (TipoOperacion, datos) => {
       TamanoPagina,
     } = datos;
 
-    const { SpGestionarAperturaCierreCaja } = await import("../utils/constantes.js");
-
     const Params = {
       pnTipoOperacion: TipoOperacion,
       pnCodigoApertura: IsNull(CodigoApertura),
@@ -581,8 +585,6 @@ export const GestionarMovimientosCaja = async (TipoOperacion, datos) => {
       CodigoUsuario,
     } = datos;
 
-    const { SpGestionarMovimientosCaja } = await import("../utils/constantes.js");
-
     const Params = {
       pnTipoOperacion: TipoOperacion,
       pnCodigoMovimiento: IsNull(CodigoMovimiento),
@@ -618,8 +620,6 @@ export const ObtenerReporteCierreCaja = async (datos) => {
   try {
     const { CodigoApertura, CodigoUsuario } = datos;
 
-    const { SpReporteCierreCaja } = await import("../utils/constantes.js");
-
     await pool.query(
       `CALL ${SpReporteCierreCaja}(?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
       [IsNull(CodigoApertura), IsNull(CodigoUsuario)]
@@ -642,8 +642,6 @@ export const ObtenerReporteCierreCaja = async (datos) => {
 export const ObtenerReporteVentasDiarias = async (datos) => {
   try {
     const { FechaInicio, FechaFin, CodigoSucursal, CodigoCaja, CodigoUsuario } = datos;
-
-    const { SpReporteVentasDiarias } = await import("../utils/constantes.js");
 
     await pool.query(
       `CALL ${SpReporteVentasDiarias}(?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
@@ -674,8 +672,6 @@ export const ObtenerReporteComprasDiarias = async (datos) => {
   try {
     const { FechaInicio, FechaFin, CodigoProveedor, CodigoEstado, CodigoUsuario } = datos;
 
-    const { SpReporteComprasDiarias } = await import("../utils/constantes.js");
-
     await pool.query(
       `CALL ${SpReporteComprasDiarias}(?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
       [
@@ -697,6 +693,41 @@ export const ObtenerReporteComprasDiarias = async (datos) => {
     return ValidarRespuestaSp(
       TypeResultErrorNoControlado,
       "ObtenerReporteComprasDiariasService: " + err
+    );
+  }
+};
+
+export const ObtenerReporteInventario = async (datos) => {
+  try {
+    const {
+      CodigoCategoria,
+      Busqueda,
+      TipoFiltroStock,
+      CodigoUsuario
+    } = datos;
+
+    console.log("datos", datos);
+
+    await pool.query(
+      `CALL ${SpReporteInventario}(?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [
+        IsNull(CodigoCategoria),
+        IsNull(Busqueda),
+        IsNull(TipoFiltroStock),
+        IsNull(CodigoUsuario),
+      ]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("ObtenerReporteInventarioService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "ObtenerReporteInventarioService: " + err
     );
   }
 };
