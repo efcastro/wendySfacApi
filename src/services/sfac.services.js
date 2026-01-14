@@ -18,6 +18,8 @@ import {
   SpReporteVentasDiarias,
   SpReporteComprasDiarias,
   SpReporteInventario,
+  SpReporteCierreMensualCaja,
+  SpGestionarEmpaquetados,
 } from "../utils/constantes.js";
 const localIps = getLocalIp();
 const IPSERVER = `${localIps[0]}:${PORT}/`;
@@ -36,6 +38,7 @@ export const GestionarFacturas = async (TipoOperacion, datos) => {
       Observaciones,
       CodigoDescuento,
       CodigoFormaPago,
+      Propina,
       Pagina,
       TamanoPagina,
       Aux,
@@ -55,6 +58,7 @@ export const GestionarFacturas = async (TipoOperacion, datos) => {
       pcObservaciones: IsNull(Observaciones),
       pnCodigoDescuento: IsNull(CodigoDescuento),
       pnCodigoFormaPago: IsNull(CodigoFormaPago),
+      pnPropina: IsNull(Propina),
       pnPagina: IsNull(Pagina),
       pnTamanoPagina: IsNull(TamanoPagina),
       Aux: IsNull(JSON.stringify(Aux)),
@@ -64,7 +68,7 @@ export const GestionarFacturas = async (TipoOperacion, datos) => {
 
     // Ejecutar el procedimiento almacenado
     await pool.query(
-      `CALL ${SpGestionarFactura}(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      `CALL ${SpGestionarFactura}(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
       [...orderedParams]
     );
     const [output] = await pool.query(
@@ -92,6 +96,7 @@ export const GestionarDetalleFactura = async (TipoOperacion, datos) => {
       CodigoUsuario,
       ProductosCombo,
       Extras,
+      CodigoEmpaquetado,
     } = datos;
     // Extraer los parámetros en el orden correcto
 
@@ -105,13 +110,14 @@ export const GestionarDetalleFactura = async (TipoOperacion, datos) => {
       pnCodigoUsuario: IsNull(CodigoUsuario),
       pnProductosCombo: IsNull(JSON.stringify(ProductosCombo)),
       pnExtras: IsNull(JSON.stringify(Extras)),
+      pnCodigoEmpaquetado: IsNull(CodigoEmpaquetado),
     };
 
     const orderedParams = Object.values(Params);
 
     // Ejecutar el procedimiento almacenado
     await pool.query(
-      `CALL ${SpGestionarDetalleFactura}(?, ?, ?, ?, ?, ?, ?,?,?, @pnTypeResult, @pcResult, @pcMessage);`,
+      `CALL ${SpGestionarDetalleFactura}(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
       [...orderedParams]
     );
     const [output] = await pool.query(
@@ -134,6 +140,7 @@ export const GestionarInventario = async (TipoOperacion, datos) => {
     const {
       CodigoInventario,
       Nombre,
+      CodigoBarras,
       FKCodigoTipoInventario,
       FKCodigoCategoriaInventario,
       Cantidad,
@@ -159,6 +166,7 @@ export const GestionarInventario = async (TipoOperacion, datos) => {
       pnTipoOperacion: TipoOperacion,
       pnCodigoInventario: IsNull(CodigoInventario),
       pcNombre: IsNull(Nombre),
+      pcCodigoBarras: IsNull(CodigoBarras),
       pnFKCodigoTipoInventario: IsNull(FKCodigoTipoInventario),
       pnFKCodigoCategoriaInventario: IsNull(FKCodigoCategoriaInventario),
       pnCantidad: IsNull(Cantidad),
@@ -184,7 +192,7 @@ export const GestionarInventario = async (TipoOperacion, datos) => {
 
     // Ejecutar el procedimiento almacenado
     await pool.query(
-      `CALL ${SpGestionarInventario}(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?, @pnTypeResult, @pcResult, @pcMessage);`,
+      `CALL ${SpGestionarInventario}(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
       [...orderedParams]
     );
     const [output] = await pool.query(
@@ -728,6 +736,89 @@ export const ObtenerReporteInventario = async (datos) => {
     return ValidarRespuestaSp(
       TypeResultErrorNoControlado,
       "ObtenerReporteInventarioService: " + err
+    );
+  }
+};
+
+export const ObtenerReporteCierreMensualCaja = async (datos) => {
+  try {
+    const {
+      Mes,
+      Anio,
+      CodigoSucursal,
+      CodigoCaja,
+      CodigoUsuario
+    } = datos;
+
+    await pool.query(
+      `CALL ${SpReporteCierreMensualCaja}(?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [
+        IsNull(Mes),
+        IsNull(Anio),
+        IsNull(CodigoSucursal),
+        IsNull(CodigoCaja),
+        IsNull(CodigoUsuario),
+      ]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("ObtenerReporteCierreMensualCajaService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "ObtenerReporteCierreMensualCajaService: " + err
+    );
+  }
+};
+
+// ==========================================
+// SERVICIOS DE EMPAQUETADOS
+// ==========================================
+
+export const GestionarEmpaquetados = async (TipoOperacion, datos) => {
+  try {
+    const {
+      CodigoEmpaquetado,
+      Nombre,
+      CodigoInventario,
+      UnidadesPorPaquete,
+      PrecioCompra,
+      PrecioVenta,
+      CodigoUsuario,
+    } = datos;
+
+    const Params = {
+      pnTipoOperacion: TipoOperacion,
+      pnCodigoEmpaquetado: IsNull(CodigoEmpaquetado),
+      pcNombre: IsNull(Nombre),
+      pnCodigoInventario: IsNull(CodigoInventario),
+      pnUnidadesPorPaquete: IsNull(UnidadesPorPaquete),
+      pdPrecioCompra: IsNull(PrecioCompra),
+      pdPrecioVenta: IsNull(PrecioVenta),
+      pnCodigoUsuario: IsNull(CodigoUsuario),
+    };
+
+    const orderedParams = Object.values(Params);
+
+    await pool.query(
+      `CALL ${SpGestionarEmpaquetados}(?, ?, ?, ?, ?, ?, ?, ?, @pnTypeResult, @pcResult, @pcMessage);`,
+      [...orderedParams]
+    );
+
+    const [output] = await pool.query(
+      `SELECT @pnTypeResult AS typeResult, @pcResult AS result, @pcMessage AS message;`
+    );
+    const { typeResult, result, message } = output[0];
+    return ValidarRespuestaSp(typeResult, message, result);
+  } catch (err) {
+    console.error("GestionarEmpaquetadosService", err);
+    return ValidarRespuestaSp(
+      TypeResultErrorNoControlado,
+      "GestionarEmpaquetadosService: " + err
     );
   }
 };

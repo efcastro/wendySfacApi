@@ -50,6 +50,11 @@ import {
   ObtenerInventarioWEBController,
   ActualizarEstadoOrdenesController,
   AsignarOrdenFacturaController,
+  // Empaquetados
+  ObtenerEmpaquetadosController,
+  CrearEmpaquetadoController,
+  EditarEmpaquetadoController,
+  EliminarEmpaquetadoController,
 } from "../controllers/sfac.controller.js";
 
 // Controllers de Apertura/Cierre de Caja (archivo separado)
@@ -67,6 +72,7 @@ import {
   ObtenerReporteVentasDiariasController,
   ObtenerReporteComprasDiariasController,
   ObtenerReporteInventarioController,
+  ObtenerReporteCierreMensualCajaController,
 } from "../controllers/caja.controller.js";
 import { authMiddleware } from "../middlewares/auth.js";
 import { privilegedAuthMiddleware } from "../middlewares/privilegedAuthMiddleware.js";
@@ -151,18 +157,46 @@ const router = express.Router();
  *           type: integer
  *           description: Cantidad del inventario/artículo
  *         PrecioVenta:
- *           type: double
+ *           type: number
+ *           format: double
  *           description: Precio del inventario/artículo
  *         CodigoUsuario:
  *           type: integer
  *           description: Código del usuario que consume el servicio
+ *         ProductosCombo:
+ *           type: array
+ *           description: Productos del combo (si aplica)
+ *           items:
+ *             type: object
+ *         Extras:
+ *           type: array
+ *           description: Productos extras agregados al detalle
+ *           items:
+ *             type: object
+ *             properties:
+ *               Codigo:
+ *                 type: string
+ *               Cantidad:
+ *                 type: integer
+ *               PrecioVenta:
+ *                 type: number
+ *               NombreProducto:
+ *                 type: string
+ *               FKInventarioExtra:
+ *                 type: integer
+ *         CodigoEmpaquetado:
+ *           type: integer
+ *           description: Código del empaquetado (si se está vendiendo por paquete)
  *       example:
  *         CodigoDetalle: 2
  *         CodigoFactura: 1
  *         CodigoInventario: 1
  *         Cantidad: 5
  *         PrecioVenta: 100.01
- *         CodigoUsuario:  1
+ *         CodigoUsuario: 1
+ *         ProductosCombo: null
+ *         Extras: null
+ *         CodigoEmpaquetado: null
  */
 
 /**
@@ -1911,5 +1945,264 @@ router.get("/ReporteComprasDiarias", authMiddleware, ObtenerReporteComprasDiaria
  *         $ref: '#/components/responses/StandardResponse500'
  */
 router.get("/ReporteInventario", authMiddleware, ObtenerReporteInventarioController);
+
+/**
+ * @swagger
+ * /SFAC/ReporteCierreMensualCaja:
+ *   get:
+ *     summary: Obtiene el reporte de cierre mensual de caja
+ *     description: |
+ *       Genera un reporte mensual consolidado de cierres de caja que incluye:
+ *       - Información de la caja y sucursal
+ *       - Información del talonario utilizado
+ *       - Resumen de facturas realizadas
+ *       - Totales por forma de pago
+ *       - Movimientos de caja (gastos, retiros, ingresos)
+ *       - Diferencias detectadas
+ *       - Productos más vendidos del mes
+ *     tags: [SFAC]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: Mes
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Mes del reporte (1-12)
+ *         example: 1
+ *       - in: query
+ *         name: Anio
+ *         schema:
+ *           type: integer
+ *         required: true
+ *         description: Año del reporte
+ *         example: 2026
+ *       - in: query
+ *         name: CodigoSucursal
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filtro opcional por sucursal
+ *       - in: query
+ *         name: CodigoCaja
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Filtro opcional por caja
+ *     responses:
+ *       200:
+ *         description: Reporte de cierre mensual generado exitosamente
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 typeResult:
+ *                   type: integer
+ *                   example: 0
+ *                 message:
+ *                   type: string
+ *                   example: Reporte de cierre mensual generado correctamente
+ *                 result:
+ *                   type: object
+ *                   properties:
+ *                     Mes:
+ *                       type: integer
+ *                     Anio:
+ *                       type: integer
+ *                     NombreMes:
+ *                       type: string
+ *                     FechaInicio:
+ *                       type: string
+ *                     FechaFin:
+ *                       type: string
+ *                     TotalCierres:
+ *                       type: integer
+ *                     TotalVentas:
+ *                       type: number
+ *                     TotalFacturas:
+ *                       type: integer
+ *                     TotalEfectivo:
+ *                       type: number
+ *                     TotalTarjeta:
+ *                       type: number
+ *                     TotalTransferencia:
+ *                       type: number
+ *                     TotalGastos:
+ *                       type: number
+ *                     TotalRetiros:
+ *                       type: number
+ *                     TotalIngresos:
+ *                       type: number
+ *                     TotalDiferencias:
+ *                       type: number
+ *                     CierresPorCaja:
+ *                       type: array
+ *                     VentasPorDia:
+ *                       type: array
+ *                     VentasPorFormaPago:
+ *                       type: array
+ *                     ProductosVendidos:
+ *                       type: array
+ *                     TalonarioInfo:
+ *                       type: array
+ *                     MovimientosCaja:
+ *                       type: array
+ *                     DetalleCierres:
+ *                       type: array
+ *                     Facturas:
+ *                       type: array
+ *       400:
+ *         $ref: '#/components/responses/StandardResponse400'
+ *       500:
+ *         $ref: '#/components/responses/StandardResponse500'
+ */
+router.get("/ReporteCierreMensualCaja", authMiddleware, ObtenerReporteCierreMensualCajaController);
+
+// ==========================================
+// RUTAS DE EMPAQUETADOS
+// ==========================================
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Empaquetado:
+ *       type: object
+ *       properties:
+ *         CodigoEmpaquetado:
+ *           type: integer
+ *           description: Código del empaquetado
+ *         Nombre:
+ *           type: string
+ *           description: Nombre del empaquetado (ej. "Caja de 12")
+ *         CodigoInventario:
+ *           type: integer
+ *           description: Código del producto al que pertenece
+ *         UnidadesPorPaquete:
+ *           type: integer
+ *           description: Cantidad de unidades por paquete
+ *         PrecioCompra:
+ *           type: number
+ *           format: double
+ *           description: Precio de compra del empaquetado
+ *         PrecioVenta:
+ *           type: number
+ *           format: double
+ *           description: Precio de venta del empaquetado
+ *       example:
+ *         CodigoEmpaquetado: 1
+ *         Nombre: "Caja de 12"
+ *         CodigoInventario: 5
+ *         UnidadesPorPaquete: 12
+ *         PrecioCompra: 150.00
+ *         PrecioVenta: 200.00
+ */
+
+/**
+ * @swagger
+ * /SFAC/EmpaquetadosProducto:
+ *   get:
+ *     summary: Obtener empaquetados de un producto
+ *     tags: [SFAC]
+ *     parameters:
+ *       - in: query
+ *         name: CodigoInventario
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Código del producto para obtener sus empaquetados
+ *         example: 5
+ *       - in: query
+ *         name: CodigoEmpaquetado
+ *         schema:
+ *           type: integer
+ *         required: false
+ *         description: Código del empaquetado específico a obtener
+ *         example: 1
+ *     responses:
+ *       200:
+ *         $ref: '#/components/responses/StandardResponse200'
+ *       400:
+ *         $ref: '#/components/responses/StandardResponse400'
+ *       500:
+ *         $ref: '#/components/responses/StandardResponse500'
+ */
+router.get("/EmpaquetadosProducto", authMiddleware, ObtenerEmpaquetadosController);
+
+/**
+ * @swagger
+ * /SFAC/Empaquetado:
+ *   post:
+ *     summary: Crear un nuevo empaquetado
+ *     tags: [SFAC]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Empaquetado'
+ *     responses:
+ *       200:
+ *         $ref: '#/components/responses/StandardResponse200'
+ *       400:
+ *         $ref: '#/components/responses/StandardResponse400'
+ *       500:
+ *         $ref: '#/components/responses/StandardResponse500'
+ */
+router.post("/Empaquetado", authMiddleware, CrearEmpaquetadoController);
+
+/**
+ * @swagger
+ * /SFAC/Empaquetado:
+ *   put:
+ *     summary: Editar un empaquetado existente
+ *     tags: [SFAC]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/Empaquetado'
+ *     responses:
+ *       200:
+ *         $ref: '#/components/responses/StandardResponse200'
+ *       400:
+ *         $ref: '#/components/responses/StandardResponse400'
+ *       500:
+ *         $ref: '#/components/responses/StandardResponse500'
+ */
+router.put("/Empaquetado", authMiddleware, EditarEmpaquetadoController);
+
+/**
+ * @swagger
+ * /SFAC/Empaquetado:
+ *   delete:
+ *     summary: Eliminar un empaquetado (eliminación lógica)
+ *     tags: [SFAC]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               CodigoEmpaquetado:
+ *                 type: integer
+ *                 description: Código del empaquetado a eliminar
+ *             required:
+ *               - CodigoEmpaquetado
+ *             example:
+ *               CodigoEmpaquetado: 1
+ *     responses:
+ *       200:
+ *         $ref: '#/components/responses/StandardResponse200'
+ *       400:
+ *         $ref: '#/components/responses/StandardResponse400'
+ *       500:
+ *         $ref: '#/components/responses/StandardResponse500'
+ */
+router.delete("/Empaquetado", authMiddleware, EliminarEmpaquetadoController);
 
 export default router;

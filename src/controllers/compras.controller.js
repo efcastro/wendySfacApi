@@ -8,6 +8,7 @@ import {
     GestionarFacturasCompras,
     GestionarDetalleFacturasCompras,
     ObtenerTotalFacturasCompras,
+    RecalcularTotalesFacturaCompra,
 } from "../services/compras.services.js";
 import { CatchControlador } from "../utils/util.js";
 
@@ -146,6 +147,19 @@ export const EliminarDetalleFacturaCompraController = async (req, res) => {
         res.status(result.status).json(result.response);
     } catch (err) {
         console.error("EliminarDetalleFacturaCompraController:", err);
+        CatchControlador(res, err);
+    }
+};
+
+export const RecalcularTotalesFacturaCompraController = async (req, res) => {
+    try {
+        const result = await RecalcularTotalesFacturaCompra({
+            CodigoFactura: req.body.CodigoFactura || req.query.CodigoFactura,
+            CodigoUsuario: req.user?.CodigoUsuario,
+        });
+        res.status(result.status).json(result.response);
+    } catch (err) {
+        console.error("RecalcularTotalesFacturaCompraController:", err);
         CatchControlador(res, err);
     }
 };

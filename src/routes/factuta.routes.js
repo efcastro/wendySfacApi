@@ -1,6 +1,10 @@
 import express from "express";
-import { generarFacturaHandler } from "../controllers/factura.controller.js";
-import { obtenerInformacionFacturaHandler } from "../controllers/factura.controller.js";
+import {
+    generarFacturaHandler,
+    obtenerInformacionFacturaHandler,
+    generarAperturaCajaHandler,
+    generarCierreCajaHandler
+} from "../controllers/factura.controller.js";
 
 const router = express.Router();
 
@@ -344,5 +348,7 @@ const router = express.Router();
 
 router.post("/generar-factura", generarFacturaHandler);
 router.get("/ObtenerInformacionFactura", obtenerInformacionFacturaHandler);
+router.post("/generar-apertura-caja", generarAperturaCajaHandler);
+router.post("/generar-cierre-caja", generarCierreCajaHandler);
 
 export default router;

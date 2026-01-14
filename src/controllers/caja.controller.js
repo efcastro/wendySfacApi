@@ -16,6 +16,7 @@ import {
     ObtenerReporteVentasDiarias,
     ObtenerReporteComprasDiarias,
     ObtenerReporteInventario,
+    ObtenerReporteCierreMensualCaja,
 } from "../services/sfac.services.js";
 import { CatchControlador } from "../utils/util.js";
 
@@ -188,7 +189,6 @@ export const ObtenerReporteComprasDiariasController = async (req, res) => {
     }
 };
 
-
 export const ObtenerReporteInventarioController = async (req, res) => {
     try {
         const result = await ObtenerReporteInventario({
@@ -198,6 +198,19 @@ export const ObtenerReporteInventarioController = async (req, res) => {
         res.status(result.status).json(result.response);
     } catch (err) {
         console.error("ObtenerReporteInventarioController:", err);
+        CatchControlador(res, err);
+    }
+};
+
+export const ObtenerReporteCierreMensualCajaController = async (req, res) => {
+    try {
+        const result = await ObtenerReporteCierreMensualCaja({
+            ...req.query,
+            CodigoUsuario: req.user?.CodigoUsuario,
+        });
+        res.status(result.status).json(result.response);
+    } catch (err) {
+        console.error("ObtenerReporteCierreMensualCajaController:", err);
         CatchControlador(res, err);
     }
 };

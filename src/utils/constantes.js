@@ -77,9 +77,13 @@ export const SpGestionarPersonas = DB + "gral_SpGestionarPersonas";
 
 //CAT
 export const SpObtenerCatalogo = DB + "cat_SpObtenerCatalogo";
+export const SpGestionarCategorias = DB + "cat_SpGestionarCategorias";
+export const SpGestionarUbicaciones = DB + "cat_SpGestionarUbicaciones";
 
 // Facturas de Compras
 export const SpGestionarFacturasCompras = DB + 'sfac_SpGestionarFacturasCompras';
 export const SpGestionarDetalleFacturasCompras = DB + 'sfac_SpGestionarDetalleFacturasCompras';
 export const SpReporteComprasDiarias = DB + 'sfac_SpReporteComprasDiarias';
 export const SpReporteInventario = DB + 'sfac_SpReporteInventario';
+export const SpReporteCierreMensualCaja = DB + 'sfac_SpReporteCierreMensualCaja';
+export const SpGestionarEmpaquetados = DB + 'sfac_SpGestionarEmpaquetados';

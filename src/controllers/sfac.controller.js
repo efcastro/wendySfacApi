@@ -26,6 +26,7 @@ import {
   GestionarDetalleTalonario,
   GestionarCajaSucursal,
   GestionarOrdenes,
+  GestionarEmpaquetados,
 } from "../services/sfac.services.js";
 import { CatchControlador } from "../utils/util.js";
 
@@ -728,6 +729,62 @@ export const CerrarOrdenesController = async (req, res) => {
     res.status(result.status).json(result.response);
   } catch (err) {
     console.error("CerrarOrdenesController:", err);
+    CatchControlador(res, err);
+  }
+};
+
+// ==========================================
+// CONTROLADORES DE EMPAQUETADOS
+// ==========================================
+
+export const ObtenerEmpaquetadosController = async (req, res) => {
+  try {
+    const result = await GestionarEmpaquetados(TipoOperacionObtener, {
+      ...req.query,
+      CodigoUsuario: req.user?.CodigoUsuario,
+    });
+    res.status(result.status).json(result.response);
+  } catch (err) {
+    console.error("ObtenerEmpaquetadosController:", err);
+    CatchControlador(res, err);
+  }
+};
+
+export const CrearEmpaquetadoController = async (req, res) => {
+  try {
+    const result = await GestionarEmpaquetados(TipoOperacionCrear, {
+      ...req.body,
+      CodigoUsuario: req.user?.CodigoUsuario,
+    });
+    res.status(result.status).json(result.response);
+  } catch (err) {
+    console.error("CrearEmpaquetadoController:", err);
+    CatchControlador(res, err);
+  }
+};
+
+export const EditarEmpaquetadoController = async (req, res) => {
+  try {
+    const result = await GestionarEmpaquetados(TipoOperacionEditar, {
+      ...req.body,
+      CodigoUsuario: req.user?.CodigoUsuario,
+    });
+    res.status(result.status).json(result.response);
+  } catch (err) {
+    console.error("EditarEmpaquetadoController:", err);
+    CatchControlador(res, err);
+  }
+};
+
+export const EliminarEmpaquetadoController = async (req, res) => {
+  try {
+    const result = await GestionarEmpaquetados(TipoOperacionEliminar, {
+      ...req.body,
+      CodigoUsuario: req.user?.CodigoUsuario,
+    });
+    res.status(result.status).json(result.response);
+  } catch (err) {
+    console.error("EliminarEmpaquetadoController:", err);
     CatchControlador(res, err);
   }
 };

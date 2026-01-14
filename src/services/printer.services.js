@@ -1,5 +1,5 @@
 import ip from "ip";
-import ping from "ping";
+import os from "os";
 import net from "net";
 import NetworkPrinter from "@point-of-sale/network-receipt-printer";
 import ReceiptPrinterEncoder from "@point-of-sale/receipt-printer-encoder";
@@ -13,6 +13,45 @@ import {
 } from "../utils/constantes.js";
 
 const PUERTO_IMPRESORA = 9100;
+
+/**
+ * Obtiene la IP local de la interfaz de red principal (la que tiene gateway/internet)
+ * Prioriza interfaces con gateway (Wi-Fi, Ethernet) sobre adaptadores virtuales
+ */
+function obtenerIPLocal() {
+  const interfaces = os.networkInterfaces();
+  const candidatos = [];
+
+  for (const [nombre, direcciones] of Object.entries(interfaces)) {
+    for (const dir of direcciones) {
+      // Solo IPv4, no internas (loopback)
+      if (dir.family === "IPv4" && !dir.internal) {
+        candidatos.push({
+          nombre,
+          ip: dir.address,
+          // Priorizar interfaces comunes de internet
+          prioridad: nombre.toLowerCase().includes("wi-fi") ||
+            nombre.toLowerCase().includes("wifi") ||
+            nombre.toLowerCase().includes("ethernet") ||
+            nombre.toLowerCase().includes("eth") ? 1 :
+            nombre.toLowerCase().includes("local area connection") ? 2 : 3
+        });
+      }
+    }
+  }
+
+  // Ordenar por prioridad y retornar la mejor opción
+  candidatos.sort((a, b) => a.prioridad - b.prioridad);
+
+  if (candidatos.length > 0) {
+    console.log(`Interfaces detectadas: ${candidatos.map(c => `${c.nombre}(${c.ip})`).join(", ")}`);
+    console.log(`Usando interfaz: ${candidatos[0].nombre} (${candidatos[0].ip})`);
+    return candidatos[0].ip;
+  }
+
+  // Fallback al método original
+  return ip.address();
+}
 
 /**
  * Verifica si una IP tiene el puerto 9100 abierto
@@ -47,46 +86,54 @@ async function verificarPuerto(
 
 /**
  * Escanea la red y devuelve solo las impresoras con puerto 9100 abierto
+ * Nota: No depende de ping ICMP, escanea directamente el puerto 9100
  */
 export async function buscarImpresorasEnRed() {
-    const posibles = [];
+  const posibles = [];
 
-    const localIp = ip.address();
-    const subnetInfo = ip.subnet(localIp, "255.255.255.0");
-    const baseIp =
-        subnetInfo.networkAddress.split(".").slice(0, 3).join(".") + ".";
-    console.log(`Escaneando red: ${baseIp}1 - ${baseIp}254`);
+  const localIp = obtenerIPLocal();
+  const subnetInfo = ip.subnet(localIp, "255.255.255.0");
+  const baseIp =
+    subnetInfo.networkAddress.split(".").slice(0, 3).join(".") + ".";
+  console.log(`Escaneando red: ${baseIp}1 - ${baseIp}254 (verificando puerto ${PUERTO_IMPRESORA} directamente)`);
+
+  // Escanear en lotes para no saturar la red
+  const BATCH_SIZE = 50;
+
+  for (let batch = 0; batch < Math.ceil(254 / BATCH_SIZE); batch++) {
     const promesas = [];
+    const start = batch * BATCH_SIZE + 1;
+    const end = Math.min(start + BATCH_SIZE, 255);
 
-    for (let i = 1; i < 255; i++) {
-        const host = `${baseIp}${i}`;
-        promesas.push(
-            ping.promise.probe(host, { timeout: 1 }).then(async (res) => {
-                if (res.alive) {
-                    const tienePuerto = await verificarPuerto(res.host);
-                    if (tienePuerto) {
-                        posibles.push({ ip: res.host });
-                    }
-                }
-            })
-        );
+    for (let i = start; i < end; i++) {
+      const host = `${baseIp}${i}`;
+      // Verificar directamente el puerto 9100 sin depender del ping
+      promesas.push(
+        verificarPuerto(host, PUERTO_IMPRESORA, 500).then((tienePuerto) => {
+          if (tienePuerto) {
+            console.log(`Impresora encontrada en: ${host}`);
+            posibles.push({ ip: host });
+          }
+        })
+      );
     }
 
     await Promise.all(promesas);
+  }
 
-    if (posibles.length === 0) {
-        return ValidarRespuestaSp(
-            TypeResultErrorControlado,
-            "No se encontraron impresoras.",
-            []
-        );
-    } else {
-        return ValidarRespuestaSp(
-            TypeResultExitoso,
-            "Impresoras encontradas correctamente.",
-            posibles
-        );
-    }
+  if (posibles.length === 0) {
+    return ValidarRespuestaSp(
+      TypeResultErrorControlado,
+      "No se encontraron impresoras.",
+      []
+    );
+  } else {
+    return ValidarRespuestaSp(
+      TypeResultExitoso,
+      "Impresoras encontradas correctamente.",
+      posibles
+    );
+  }
 }
 
 export async function enviarPruebaDeImpresion(ipAddress) {
